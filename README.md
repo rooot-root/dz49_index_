@@ -19,10 +19,11 @@ WHERE
 ### Задание 2
 
 Выполните explain analyze следующего запроса:
-
+```
 select distinct concat(c.last_name, ' ', c.first_name), sum(p.amount) over (partition by c.customer_id, f.title)
 from payment p, rental r, customer c, inventory i, film f
 where date(p.payment_date) = '2005-07-30' and p.payment_date = r.rental_date and r.customer_id = c.customer_id and i.inventory_id = r.inventory_id
+```
 перечислите узкие места;
 оптимизируйте запрос: внесите корректировки по использованию операторов, при необходимости добавьте индексы.
 
@@ -36,7 +37,7 @@ where date(p.payment_date) = '2005-07-30' and p.payment_date = r.rental_date and
 Неявный синтаксис JOIN: Использование запятых в FROM для соединения таблиц устарело и затрудняет чтение, хотя сам по себе это не главная проблема производительности.
 
 Оптимизированный запрос:
-
+```
 SELECT 
     CONCAT(c.last_name, ' ', c.first_name) AS customer_name,
     SUM(p.amount) OVER (PARTITION BY c.customer_id) AS total_amount
@@ -47,7 +48,7 @@ INNER JOIN
 WHERE 
     p.payment_date >= '2005-07-30 00:00:00' 
     AND p.payment_date < '2005-07-31 00:00:00';
-	
+```	
 изменения:
 
 Удалены лишние таблицы: Мы исключили rental, inventory и film. Данные о платежах (payment) уже содержат customer_id, поэтому мы можем напрямую соединить payment с customer.
@@ -59,7 +60,7 @@ WHERE
 Рекомендуемый индекс:
 
 Для максимальной производительности этого запроса убедитесь, что в таблице payment существует индекс по столбцу payment_date.
-
+```
 CREATE INDEX idx_payment_date ON payment(payment_date);
-
+```
 Этот индекс позволит быстро отфильтровать строки за нужный день без полного сканирования таблицы .
